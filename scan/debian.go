@@ -45,11 +45,7 @@ func newDebian(c config.ServerInfo) *debian {
 // Ubuntu, Debian
 // https://github.com/serverspec/specinfra/blob/master/lib/specinfra/helper/detect_os/debian.rb
 func detectDebian(c config.ServerInfo) (itsMe bool, deb osTypeInterface, err error) {
-
 	deb = newDebian(c)
-
-	// set sudo option flag
-	c.SudoOpt = config.SudoOption{ExecBySudo: true}
 	deb.setServerInfo(c)
 
 	if r := sshExec(c, "ls /etc/debian_version", noSudo); !r.isSuccess() {

@@ -138,6 +138,22 @@ func (l *base) parseDockerPs(stdout string) (containers []config.Container, err 
 	return
 }
 
+func (l *base) checkIfSudoNoPasswd() error {
+	// FreeBSD doesn't need root privilege
+	if l.getServerInfo().Family == "FreeBSD" {
+		l.log.Infof("Sudo ... OK %s", l.getServerInfo().ServerName)
+		return nil
+	}
+	r := l.ssh("pwd", sudo)
+	if !r.isSuccess() {
+		l.log.Errorf("sudo error on %s", r)
+		return fmt.Errorf("Failed to sudo: %s", r)
+	}
+	//TODO Logging
+	l.log.Infof("Sudo ... OK %s", l.getServerInfo().ServerName)
+	return nil
+}
+
 func (l *base) detectPlatform() error {
 	ok, instanceID, err := l.detectRunningOnAws()
 	if err != nil {

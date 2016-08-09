@@ -23,6 +23,7 @@ type osTypeInterface interface {
 	setDistributionInfo(string, string)
 	getDistributionInfo() string
 
+	checkIfSudoNoPasswd() error
 	detectPlatform() error
 	getPlatform() models.Platform
 
@@ -137,7 +138,6 @@ func detectOS(c config.ServerInfo) (osType osTypeInterface) {
 func InitServers(localLogger *logrus.Entry) {
 	Log = localLogger
 	servers = detectServerOSes()
-
 	containers := detectContainerOSes()
 	servers = append(servers, containers...)
 
@@ -343,6 +343,41 @@ func detectContainerOSesOnServer(containerHost osTypeInterface) (oses []osTypeIn
 		return append(oses, containerHost)
 	}
 	return oses
+}
+
+// CheckIfSudoNoPasswd checks whether vuls can sudo with nopassword via SSH
+func CheckIfSudoNoPasswd(localLogger *logrus.Entry) error {
+	timeoutSec := 1 * 60
+	errs := parallelSSHExec(func(o osTypeInterface) error {
+		return o.checkIfSudoNoPasswd()
+	}, timeoutSec)
+
+	//TODO Errormessage
+	return fmt.Errorf(fmt.Sprintf("%s", errs))
+	//check errors, if any errors occurred, return err
+
+	//  if 0 < len(errs) {
+	//      // Only logging
+	//      Log.Warnf("Failed to detect platforms. err: %v", errs)
+	//  }
+	//  for i, s := range servers {
+	//      if s.getServerInfo().IsContainer() {
+	//          Log.Infof("(%d/%d) %s on %s is running on %s",
+	//              i+1, len(servers),
+	//              s.getServerInfo().Container.Name,
+	//              s.getServerInfo().ServerName,
+	//              s.getPlatform().Name,
+	//          )
+
+	//      } else {
+	//          Log.Infof("(%d/%d) %s is running on %s",
+	//              i+1, len(servers),
+	//              s.getServerInfo().ServerName,
+	//              s.getPlatform().Name,
+	//          )
+	//      }
+	//  }
+	return nil
 }
 
 // DetectPlatforms detects the platform of each servers.

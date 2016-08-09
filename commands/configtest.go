@@ -98,7 +98,7 @@ func (p *ConfigtestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interfa
 
 	c.Conf.Debug = p.debug
 
-	err = c.Load(p.configPath, keyPass, "")
+	err = c.Load(p.configPath, keyPass)
 	if err != nil {
 		logrus.Errorf("Error loading %s, %s", p.configPath, err)
 		return subcommands.ExitUsageError
@@ -151,6 +151,10 @@ func (p *ConfigtestCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interfa
 
 	Log.Info("Detecting Server/Contianer OS... ")
 	scan.InitServers(Log)
+	if err := scan.CheckIfSudoNoPasswd(Log); err != nil {
+		Log.Errorf("Failed to sudo with nopassword via SSH. Define NOPASSWD in /etc/sudoers on target servers")
+		return subcommands.ExitFailure
+	}
 
 	return subcommands.ExitSuccess
 }
